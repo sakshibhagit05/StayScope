@@ -1,21 +1,19 @@
 # StayScope – Airbnb Data Analysis
 
 ## Project Overview
-
 StayScope is a data analysis project based on the New York City Airbnb 2019 dataset.
 
 The project explores Airbnb listing patterns, pricing trends, room types, neighbourhood distributions, and listing title text patterns using Python and data analysis techniques.
 
 ## Dataset
+- Dataset: AB_NYC_2019.csv
+- Source: New York City Airbnb Open Data
+- Format: CSV
+- Dataset Year: 2019
 
-- **Dataset Name:** AB_NYC_2019.csv
-- **Source:** New York City Airbnb Open Data
-- **Format:** CSV
-- **Location:** New York City, USA
-- **Year:** 2019
+**Note:** This project uses historical data from 2019. Therefore, the findings represent patterns in the Airbnb market during that period and should not be considered current market trends.
 
 ## Technologies Used
-
 - Python
 - Pandas
 - NumPy
@@ -27,9 +25,6 @@ The project explores Airbnb listing patterns, pricing trends, room types, neighb
 - Plotly
 
 ## Project Analysis
-
-The project includes the following analysis tasks:
-
 1. Data inspection and cleaning
 2. Exploratory Data Analysis (EDA)
 3. Price distribution analysis
@@ -47,47 +42,25 @@ The project includes the following analysis tasks:
 StayScope/
 ├── data/
 │   ├── AB_NYC_2019.csv
-│   ├── cleaned_airbnb.csv
-│   └── New_York_City_.png
+│   └── cleaned_airbnb.csv
 ├── notebooks/
 │   └── StayScope_Analysis.ipynb
 ├── outputs/
-│   ├── Analysis visualizations
-│   └── Analysis CSV files
 ├── src/
-│   ├── clean_data.py
-│   ├── clustering.py
-│   ├── eda_analysis.py
-│   ├── inspect_data.py
-│   ├── outlier_analysis.py
-│   ├── pattern_analysis.py
-│   └── text_mining.py
-├── .gitignore
 ├── requirements.txt
-└── README.md
+├── README.md
+└── .gitignore
 ```
 
-## Installation and Setup
+## Installation
 
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/sakshibhagit05/StayScope.git
-```
-
-### 2. Navigate to the Project Directory
-
-```bash
-cd StayScope
-```
-
-### 3. Create a Virtual Environment
+1. Clone or download the project.
+2. Navigate to the project directory.
+3. Create and activate a virtual environment.
 
 ```bash
 python -m venv venv
 ```
-
-### 4. Activate the Virtual Environment
 
 For Windows PowerShell:
 
@@ -95,34 +68,26 @@ For Windows PowerShell:
 .\venv\Scripts\Activate.ps1
 ```
 
-### 5. Install Required Libraries
+4. Install the required libraries:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 6. Start Jupyter Notebook
+5. Launch Jupyter Notebook:
 
 ```bash
 jupyter notebook
 ```
 
-Open `notebooks/StayScope_Analysis.ipynb` and run all cells.
+6. Open `notebooks/StayScope_Analysis.ipynb` and run the notebook cells.
 
 ## Output
 
-The project generates visualizations and CSV files containing analysis results, including:
-
-- Price distribution visualizations
-- Room type comparisons
-- Neighbourhood analysis
-- Outlier analysis
-- K-Means clustering results
-- Word frequency and bigram analysis
-- Price pattern visualizations
+The project generates visualizations and CSV files containing analysis results, including price distributions, clustering, neighbourhood patterns, and text mining results.
 
 ## Conclusion
 
-StayScope explores the 2019 New York City Airbnb dataset to identify historical pricing trends, neighbourhood patterns, room type distributions, and listing clusters.
+StayScope provides an exploratory analysis of the New York City Airbnb 2019 dataset. It identifies historical pricing patterns, neighbourhood distributions, room type trends, and listing clusters using data analysis and machine learning techniques.
 
-Since the analysis is based on 2019 data, the findings represent historical market patterns and should not be interpreted as current Airbnb market trends.
+The results reflect the Airbnb market conditions represented by the 2019 dataset and do not necessarily indicate present-day market conditions.
