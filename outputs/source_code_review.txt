@@ -1,0 +1,620 @@
+
+========== clean_data.py ==========
+
+import pandas as pd
+import os
+
+# Project directory
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# File paths
+INPUT_PATH = os.path.join(BASE_DIR, "data", "AB_NYC_2019.csv")
+OUTPUT_PATH = os.path.join(BASE_DIR, "data", "cleaned_airbnb.csv")
+
+print("========== STAYSCOPE DATA CLEANING ==========")
+
+# Check dataset
+if not os.path.exists(INPUT_PATH):
+    print("Dataset not found! Check the file location.")
+
+else:
+    # Load dataset
+    df = pd.read_csv(INPUT_PATH)
+
+    print("\nOriginal Dataset Shape:", df.shape)
+
+    # 1. Remove duplicate records
+    df.drop_duplicates(inplace=True)
+
+    # 2. Handle missing listing names
+    df["name"] = df["name"].fillna("Unknown Listing")
+
+    # 3. Handle missing host names
+    df["host_name"] = df["host_name"].fillna("Unknown Host")
+
+    # 4. Handle missing monthly reviews
+    df["reviews_per_month"] = df["reviews_per_month"].fillna(0)
+
+    # 5. Convert review date into datetime
+    df["last_review"] = pd.to_datetime(
+        df["last_review"],
+        errors="coerce"
+    )
+
+    # 6. Remove invalid prices
+    df = df[df["price"] > 0]
+
+    # 7. Remove invalid coordinates
+    df = df[
+        df["latitude"].between(-90, 90) &
+        df["longitude"].between(-180, 180)
+    ]
+
+    # 8. Save cleaned dataset
+    df.to_csv(OUTPUT_PATH, index=False)
+
+    print("\nCleaning Completed Successfully!")
+
+    print("\nCleaned Dataset Shape:", df.shape)
+
+    print("\nRemaining Missing Values:")
+    print(df.isnull().sum())
+
+    print("\nCleaned dataset saved at:")
+    print(OUTPUT_PATH)
+
+    print("\n========== END ==========")
+
+========== clustering.py ==========
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import os
+
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score
+
+# Project directory
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+DATA_PATH = os.path.join(BASE_DIR, "data", "cleaned_airbnb.csv")
+OUTPUT_DIR = os.path.join(BASE_DIR, "outputs")
+
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+print("========== STAYSCOPE K-MEANS CLUSTERING ==========")
+
+# Load dataset
+df = pd.read_csv(DATA_PATH)
+
+# Select features
+features = [
+    "price",
+    "minimum_nights",
+    "number_of_reviews",
+    "reviews_per_month",
+    "availability_365"
+]
+
+# Prepare data
+X = df[features].copy()
+
+# Reduce extreme skew in numerical features
+X["price"] = np.log1p(X["price"])
+X["minimum_nights"] = np.log1p(X["minimum_nights"])
+X["number_of_reviews"] = np.log1p(X["number_of_reviews"])
+X["reviews_per_month"] = np.log1p(X["reviews_per_month"])
+
+# Standardize features
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# Apply K-Means
+kmeans = KMeans(
+    n_clusters=4,
+    random_state=42,
+    n_init=10
+)
+
+df["cluster"] = kmeans.fit_predict(X_scaled)
+
+# Evaluate clustering
+score = silhouette_score(
+    X_scaled,
+    df["cluster"],
+    sample_size=5000,
+    random_state=42
+)
+
+print("\nSilhouette Score:", round(score, 3))
+
+# Cluster summary
+print("\nCluster Summary:")
+
+summary = df.groupby("cluster")[features].mean().round(2)
+print(summary)
+
+# Number of listings in each cluster
+print("\nListings per Cluster:")
+print(df["cluster"].value_counts().sort_index())
+
+# Save clustered dataset
+clustered_path = os.path.join(
+    OUTPUT_DIR,
+    "clustered_airbnb.csv"
+)
+
+df.to_csv(clustered_path, index=False)
+
+# Cluster visualization
+plt.figure(figsize=(9, 6))
+
+sns.scatterplot(
+    data=df.sample(min(5000, len(df)), random_state=42),
+    x="minimum_nights",
+    y="price",
+    hue="cluster",
+    palette="viridis",
+    alpha=0.7
+)
+
+plt.title("Airbnb Listings - K-Means Clustering")
+plt.xlabel("Minimum Nights")
+plt.ylabel("Price (USD)")
+plt.tight_layout()
+
+plt.savefig(
+    os.path.join(OUTPUT_DIR, "kmeans_clusters.png")
+)
+
+plt.show()
+
+print("\nClustering Completed Successfully!")
+print("\nClustered dataset saved at:", clustered_path)
+
+print("\n========== END ==========")
+
+========== eda_analysis.py ==========
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import os
+
+# Project directory
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# Dataset path
+DATA_PATH = os.path.join(BASE_DIR, "data", "cleaned_airbnb.csv")
+
+# Output directory
+OUTPUT_DIR = os.path.join(BASE_DIR, "outputs")
+
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+# Load cleaned dataset
+df = pd.read_csv(DATA_PATH)
+
+print("========== STAYSCOPE EDA ANALYSIS ==========")
+
+# 1. Basic statistics
+print("\nDataset Overview:")
+print(df.describe())
+
+# 2. Average price
+print("\nAverage Airbnb Price:")
+print(round(df["price"].mean(), 2))
+
+# 3. Room type distribution
+print("\nRoom Type Distribution:")
+print(df["room_type"].value_counts())
+
+# 4. Average price by room type
+print("\nAverage Price by Room Type:")
+print(df.groupby("room_type")["price"].mean().round(2))
+
+# 5. Top 10 neighbourhoods by listing count
+print("\nTop 10 Neighbourhoods:")
+print(df["neighbourhood"].value_counts().head(10))
+
+# 6. Average price by neighbourhood group
+print("\nAverage Price by Neighbourhood Group:")
+print(
+    df.groupby("neighbourhood_group")["price"]
+    .mean()
+    .sort_values(ascending=False)
+    .round(2)
+)
+
+# 7. Room Type Distribution Graph
+plt.figure(figsize=(8, 5))
+sns.countplot(data=df, x="room_type", hue="room_type", legend=False)
+plt.title("Airbnb Room Type Distribution")
+plt.xlabel("Room Type")
+plt.ylabel("Number of Listings")
+plt.tight_layout()
+plt.savefig(os.path.join(OUTPUT_DIR, "room_type_distribution.png"))
+plt.show()
+
+# 8. Average Price by Room Type Graph
+plt.figure(figsize=(8, 5))
+sns.barplot(data=df, x="room_type", y="price", hue="room_type", legend=False)
+plt.title("Average Price by Room Type")
+plt.xlabel("Room Type")
+plt.ylabel("Average Price ($)")
+plt.tight_layout()
+plt.savefig(os.path.join(OUTPUT_DIR, "average_price_by_room_type.png"))
+plt.show()
+
+# 9. Price Distribution Graph
+plt.figure(figsize=(8, 5))
+sns.histplot(df["price"], bins=50, kde=True)
+plt.title("Airbnb Price Distribution")
+plt.xlabel("Price ($)")
+plt.ylabel("Number of Listings")
+plt.xlim(0, 1000)
+plt.tight_layout()
+plt.savefig(os.path.join(OUTPUT_DIR, "price_distribution.png"))
+plt.show()
+
+# 10. Top 10 Neighbourhoods Graph
+top_neighbourhoods = df["neighbourhood"].value_counts().head(10)
+
+plt.figure(figsize=(10, 6))
+sns.barplot(
+    x=top_neighbourhoods.values,
+    y=top_neighbourhoods.index,
+    hue=top_neighbourhoods.index,
+    legend=False
+)
+plt.title("Top 10 Neighbourhoods by Listings")
+plt.xlabel("Number of Listings")
+plt.ylabel("Neighbourhood")
+plt.tight_layout()
+plt.savefig(os.path.join(OUTPUT_DIR, "top_neighbourhoods.png"))
+plt.show()
+
+print("\nEDA Analysis Completed Successfully!")
+print("\nGraphs saved in outputs folder.")
+print("\n========== END ==========")
+
+========== inspect_data.py ==========
+
+import pandas as pd
+import os
+
+# Get the project directory
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# Dataset path
+DATASET_PATH = os.path.join(BASE_DIR, "data", "AB_NYC_2019.csv")
+
+# Check dataset
+if not os.path.exists(DATASET_PATH):
+    print("Dataset not found! Check the file location.")
+else:
+    # Load dataset
+    df = pd.read_csv(DATASET_PATH)
+
+    print("\n========== STAYSCOPE ==========")
+    print("\nDataset loaded successfully!")
+
+    # Display dataset shape
+    print("\nDataset Shape:")
+    print(df.shape)
+
+    # Display first five records
+    print("\nFirst 5 Records:")
+    print(df.head())
+
+    # Display column names
+    print("\nColumn Names:")
+    print(df.columns.tolist())
+
+    # Display dataset information
+    print("\nDataset Information:")
+    df.info()
+
+    # Check missing values
+    print("\nMissing Values:")
+    print(df.isnull().sum())
+
+    print("\n========== END ==========")
+
+========== outlier_analysis.py ==========
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import os
+
+# Project directory
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+DATA_PATH = os.path.join(BASE_DIR, "data", "cleaned_airbnb.csv")
+OUTPUT_DIR = os.path.join(BASE_DIR, "outputs")
+
+# Load dataset
+df = pd.read_csv(DATA_PATH)
+
+print("========== PRICE OUTLIER ANALYSIS ==========")
+
+# Price statistics
+print("\nPrice Statistics:")
+print(df["price"].describe())
+
+# Calculate quartiles
+Q1 = df["price"].quantile(0.25)
+Q3 = df["price"].quantile(0.75)
+
+IQR = Q3 - Q1
+
+lower_limit = Q1 - 1.5 * IQR
+upper_limit = Q3 + 1.5 * IQR
+
+print("\nLower Limit:", lower_limit)
+print("Upper Limit:", upper_limit)
+
+# Identify outliers
+outliers = df[
+    (df["price"] < lower_limit) |
+    (df["price"] > upper_limit)
+]
+
+print("\nTotal Outliers:", len(outliers))
+
+print("\nTop 10 Most Expensive Listings:")
+print(
+    df.nlargest(10, "price")[
+        ["name", "neighbourhood_group", "room_type", "price"]
+    ]
+)
+
+# Boxplot
+plt.figure(figsize=(10, 5))
+sns.boxplot(x=df["price"])
+
+plt.title("Airbnb Price Outlier Analysis")
+plt.xlabel("Price (USD)")
+plt.xlim(0, upper_limit * 1.5)
+
+plt.tight_layout()
+plt.savefig(
+    os.path.join(OUTPUT_DIR, "price_outliers.png")
+)
+plt.show()
+
+print("\nOutlier Analysis Completed!")
+print("========== END ==========")
+
+========== pattern_analysis.py ==========
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import os
+
+# Project directory
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+DATA_PATH = os.path.join(BASE_DIR, "data", "cleaned_airbnb.csv")
+OUTPUT_DIR = os.path.join(BASE_DIR, "outputs")
+
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+print("========== STAYSCOPE PATTERN ANALYSIS ==========")
+
+# Load dataset
+df = pd.read_csv(DATA_PATH)
+
+# 1. Listings in each neighbourhood group
+neighbourhood_counts = (
+    df["neighbourhood_group"]
+    .value_counts()
+)
+
+print("\nListings by Neighbourhood Group:")
+print(neighbourhood_counts)
+
+# 2. Room type distribution by neighbourhood group
+room_patterns = pd.crosstab(
+    df["neighbourhood_group"],
+    df["room_type"]
+)
+
+print("\nRoom Type Distribution by Neighbourhood Group:")
+print(room_patterns)
+
+# 3. Average price by neighbourhood group and room type
+price_patterns = df.pivot_table(
+    values="price",
+    index="neighbourhood_group",
+    columns="room_type",
+    aggfunc="mean"
+).round(2)
+
+print("\nAverage Price by Neighbourhood Group and Room Type:")
+print(price_patterns)
+
+# Save analysis results
+neighbourhood_counts.to_csv(
+    os.path.join(OUTPUT_DIR, "neighbourhood_counts.csv")
+)
+
+room_patterns.to_csv(
+    os.path.join(OUTPUT_DIR, "room_type_patterns.csv")
+)
+
+price_patterns.to_csv(
+    os.path.join(OUTPUT_DIR, "price_patterns.csv")
+)
+
+# 4. Visualize room type distribution
+room_patterns.plot(
+    kind="bar",
+    figsize=(11, 6)
+)
+
+plt.title("Room Type Distribution by Neighbourhood Group")
+plt.xlabel("Neighbourhood Group")
+plt.ylabel("Number of Listings")
+plt.xticks(rotation=0)
+plt.tight_layout()
+
+plt.savefig(
+    os.path.join(OUTPUT_DIR, "room_type_patterns.png")
+)
+
+plt.show()
+
+# 5. Visualize average price patterns
+plt.figure(figsize=(11, 6))
+
+sns.heatmap(
+    price_patterns,
+    annot=True,
+    fmt=".1f",
+    cmap="YlGnBu"
+)
+
+plt.title("Average Airbnb Price by Neighbourhood Group and Room Type")
+plt.xlabel("Room Type")
+plt.ylabel("Neighbourhood Group")
+plt.tight_layout()
+
+plt.savefig(
+    os.path.join(OUTPUT_DIR, "price_patterns_heatmap.png")
+)
+
+plt.show()
+
+print("\nPattern Analysis Completed Successfully!")
+
+print("\nGenerated files:")
+print("neighbourhood_counts.csv")
+print("room_type_patterns.csv")
+print("price_patterns.csv")
+print("room_type_patterns.png")
+print("price_patterns_heatmap.png")
+
+print("\n========== END ==========")
+
+========== text_mining.py ==========
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import os
+
+from sklearn.feature_extraction.text import CountVectorizer
+
+# Project directory
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+DATA_PATH = os.path.join(BASE_DIR, "data", "cleaned_airbnb.csv")
+OUTPUT_DIR = os.path.join(BASE_DIR, "outputs")
+
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+print("========== STAYSCOPE TEXT MINING ==========")
+
+# Load dataset
+df = pd.read_csv(DATA_PATH)
+
+# Prepare listing names
+titles = df["name"].fillna("").astype(str)
+
+# Remove empty listing names
+titles = titles[titles.str.strip() != ""]
+
+# Extract individual words
+word_vectorizer = CountVectorizer(
+    stop_words="english",
+    ngram_range=(1, 1),
+    max_features=20
+)
+
+word_matrix = word_vectorizer.fit_transform(titles)
+
+word_counts = word_matrix.sum(axis=0).A1
+words = word_vectorizer.get_feature_names_out()
+
+word_results = pd.DataFrame({
+    "term": words,
+    "frequency": word_counts
+})
+
+word_results = word_results.sort_values(
+    by="frequency",
+    ascending=False
+)
+
+print("\nTop 20 Frequently Used Words:")
+print(word_results.to_string(index=False))
+
+# Extract two-word phrases
+bigram_vectorizer = CountVectorizer(
+    stop_words="english",
+    ngram_range=(2, 2),
+    max_features=20
+)
+
+bigram_matrix = bigram_vectorizer.fit_transform(titles)
+
+bigram_counts = bigram_matrix.sum(axis=0).A1
+bigrams = bigram_vectorizer.get_feature_names_out()
+
+bigram_results = pd.DataFrame({
+    "term": bigrams,
+    "frequency": bigram_counts
+})
+
+bigram_results = bigram_results.sort_values(
+    by="frequency",
+    ascending=False
+)
+
+print("\nTop 20 Frequently Used Two-Word Phrases:")
+print(bigram_results.to_string(index=False))
+
+# Save keyword results
+word_results.to_csv(
+    os.path.join(OUTPUT_DIR, "frequent_words.csv"),
+    index=False
+)
+
+bigram_results.to_csv(
+    os.path.join(OUTPUT_DIR, "frequent_bigrams.csv"),
+    index=False
+)
+
+# Visualize frequent words
+plt.figure(figsize=(12, 7))
+
+sns.barplot(
+    data=word_results,
+    x="frequency",
+    y="term"
+)
+
+plt.title("Top 20 Frequently Used Words in Airbnb Listing Titles")
+plt.xlabel("Frequency")
+plt.ylabel("Words")
+plt.tight_layout()
+
+plt.savefig(
+    os.path.join(OUTPUT_DIR, "frequent_words.png")
+)
+
+plt.show()
+
+print("\nText Mining Completed Successfully!")
+print("\nGenerated files:")
+print("frequent_words.csv")
+print("frequent_bigrams.csv")
+print("frequent_words.png")
+
+print("\n========== END ==========")
