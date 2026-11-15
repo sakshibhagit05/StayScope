@@ -1,16 +1,21 @@
 # StayScope – Airbnb Data Analysis
 
 ## Project Overview
+
 StayScope is a data analysis project based on the New York City Airbnb 2019 dataset.
 
-The project explores Airbnb listing patterns, pricing trends, room types, neighbourhood distributions, and listing title text patterns.
+The project explores Airbnb listing patterns, pricing trends, room types, neighbourhood distributions, and listing title text patterns using Python and data analysis techniques.
 
 ## Dataset
-- Dataset: AB_NYC_2019.csv
-- Source: New York City Airbnb Open Data
-- Format: CSV
+
+- **Dataset Name:** AB_NYC_2019.csv
+- **Source:** New York City Airbnb Open Data
+- **Format:** CSV
+- **Location:** New York City, USA
+- **Year:** 2019
 
 ## Technologies Used
+
 - Python
 - Pandas
 - NumPy
@@ -18,8 +23,13 @@ The project explores Airbnb listing patterns, pricing trends, room types, neighb
 - Seaborn
 - Scikit-learn
 - Jupyter Notebook
+- Streamlit
+- Plotly
 
 ## Project Analysis
+
+The project includes the following analysis tasks:
+
 1. Data inspection and cleaning
 2. Exploratory Data Analysis (EDA)
 3. Price distribution analysis
@@ -36,32 +46,80 @@ The project explores Airbnb listing patterns, pricing trends, room types, neighb
 ```text
 StayScope/
 ├── data/
+│   ├── AB_NYC_2019.csv
+│   ├── cleaned_airbnb.csv
+│   └── New_York_City_.png
 ├── notebooks/
 │   └── StayScope_Analysis.ipynb
 ├── outputs/
+│   ├── Analysis visualizations
+│   └── Analysis CSV files
 ├── src/
-├── venv/
+│   ├── clean_data.py
+│   ├── clustering.py
+│   ├── eda_analysis.py
+│   ├── inspect_data.py
+│   ├── outlier_analysis.py
+│   ├── pattern_analysis.py
+│   └── text_mining.py
+├── .gitignore
 ├── requirements.txt
 └── README.md
 ```
 
+## Installation and Setup
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/sakshibhagit05/StayScope.git
+```
+
+### 2. Navigate to the Project Directory
+
+```bash
+cd StayScope
+```
+
+### 3. Create a Virtual Environment
+
+```bash
+python -m venv venv
+```
+
+### 4. Activate the Virtual Environment
+
+For Windows PowerShell:
+
+```powershell
+.\venv\Scripts\Activate.ps1
+```
+
+### 5. Install Required Libraries
+
+```bash
+pip install -r requirements.txt
+```
+
+### 6. Start Jupyter Notebook
+
+```bash
+jupyter notebook
+```
+
+Open `notebooks/StayScope_Analysis.ipynb` and run all cells.
+
 ## Output
-The project generates visualizations and CSV files containing analysis results, including price distributions, clustering, neighbourhood patterns, and text mining results.
 
-## How to Run
+The project generates visualizations and CSV files containing analysis results, including:
 
-1. Clone or download the project.
-2. Create a virtual environment.
-3. Activate the virtual environment.
-4. Install required libraries using:
-
-   pip install -r requirements.txt
-
-5. Start Jupyter Notebook:
-
-   jupyter notebook
-
-6. Open notebooks/StayScope_Analysis.ipynb and run all cells.
+- Price distribution visualizations
+- Room type comparisons
+- Neighbourhood analysis
+- Outlier analysis
+- K-Means clustering results
+- Word frequency and bigram analysis
+- Price pattern visualizations
 
 ## Conclusion
 
